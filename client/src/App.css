@@ -92,6 +92,7 @@ input:focus {
 form {
   display: flex;
   flex-direction: column;
+
   align-items: center;
   margin: 20px 0;
 }
@@ -306,9 +307,146 @@ form button:hover {
   position: relative;
 }
 
-.emoji-picker-react {
+.features-container {
+  max-width: 800px;
+  padding: 40px;
+  color: #e0e0e0;
+
+}
+
+.features-heading {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 30px;
+  color: #f5b041;
+}
+
+.features-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.feature-item {
+  background-color: #162447;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feature-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.feature-item h3 {
+  font-size: 1.5rem;
+  color: #4cd137;
+  margin-bottom: 10px;
+}
+
+.feature-item p {
+  font-size: 1rem;
+  color: #e0e0e0;
+}
+
+@media (max-width: 768px) {
+  .features-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+#chat1 {
+  width: 600px;
+  height: 700px;
+}
+
+.features-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+
+}
+
+.auth-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  padding: 0 250px;
+}
+
+.side-image {
+  width: 200px;
+  height: auto;
+}
+
+.right-img {
+  width: 250px;
+  height: 400px
+}
+
+.chat-input-container {
+  display: flex;
+  align-items: center;
+  position: relative;
+  /* Ensures relative positioning for absolute children */
+}
+
+.chat-form {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+input[type="text"] {
+  flex: 1;
+  padding: 8px;
+}
+
+button[type="submit"] {
+  margin-left: 8px;
+}
+
+.chat-input-container {
+  position: relative;
+  /* Other styling for the container */
+}
+
+.chat-form {
+  display: flex;
+  align-items: center;
+  /* Other styling for the form */
+}
+
+.picker-container {
+  position: relative;
+  display: inline-block;
+}
+
+.emoji-icon {
+  cursor: pointer;
+  background-color: #93b13c;
+}
+
+.emoji-icon:hover {
+  background-color: #7f9c2f;
+}
+
+.emoji-picker-wrapper {
   position: absolute;
-  bottom: 60px;
+  bottom: 100%;
+  /* Opens the picker above the emoji icon */
   right: 0;
-  z-index: 1000;
+  /* Aligns the picker with the right side of the emoji icon */
+  z-index: 100;
+  /* Ensures it appears over other content */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.loading-screen {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
 }
