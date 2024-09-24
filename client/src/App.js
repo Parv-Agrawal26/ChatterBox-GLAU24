@@ -343,7 +343,9 @@ function App() {
                   <div className="picker-container">
                     <button
                       className="emoji-icon"
-                      onClick={() => setShowPicker((val) => !val)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setShowPicker((val) => !val)}}
                     >
                       Use Emoji😀
                     </button>
