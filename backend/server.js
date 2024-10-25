@@ -1,11 +1,15 @@
 const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
-const mongoose = require("mongoose");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const cookieParser = require("cookie-parser"); // Import cookie-parser
+const cookieParser = require("cookie-parser");
+require("./config/mongoose-connection");
+require("dotenv").config()
+const User = require("./models/userModel");
+const Message = require("./models/messageModel");
+const verifyToken = require("./middlewares/verifyToken");
 
 const app = express();
 const server = http.createServer(app);
@@ -17,6 +21,8 @@ const io = socketIo(server, {
   },
 });
 
+const JWT_SECRET = process.env.JWT_SECRET;
+
 app.use(
   cors({
     origin: "http://localhost:3000",
@@ -25,49 +31,6 @@ app.use(
 );
 app.use(express.json());
 app.use(cookieParser()); // Use cookie-parser
-
-const MONGO_URL = "mongodb://localhost:27017/chatapp";
-const JWT_SECRET = "your_jwt_secret";
-
-mongoose
-  .connect(MONGO_URL, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => console.log("Connected to MongoDB"))
-  .catch((err) => console.error("Could not connect to MongoDB:", err));
-
-// User Schema
-const userSchema = new mongoose.Schema({
-  username: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-});
-
-const User = mongoose.model("User", userSchema);
-
-// Message Schema
-const messageSchema = new mongoose.Schema({
-  content: String,
-  sender: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  receiver: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  timestamp: { type: Date, default: Date.now },
-});
-
-const Message = mongoose.model("Message", messageSchema);
-
-// Middleware to verify JWT from cookie
-const verifyToken = (req, res, next) => {
-  const token = req.cookies.token; // Read token from cookie
-  if (!token) return res.status(401).json({ error: "Access denied" });
-
-  try {
-    const verified = jwt.verify(token, JWT_SECRET);
-    req.user = verified;
-    next();
-  } catch (err) {
-    res.status(400).json({ error: "Invalid token" });
-  }
-};
 
 // Register route
 app.post("/api/register", async (req, res) => {
@@ -116,11 +79,12 @@ app.post("/api/login", async (req, res) => {
         username: user.username,
       });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Error logging in" });
   }
 });
 
-// Logout route to clear the cookie
+// Logout route
 app.post("/api/logout", (req, res) => {
   res.clearCookie("token").json({ message: "Logout successful" });
 });

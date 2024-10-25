@@ -1,12 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import io from "socket.io-client";
 import "./App.css";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
-import WhyChooseChatterBox from "./components/WhyChooseChatterBox";
 import Footer from "./components/Footer";
 import EmojiPicker from "emoji-picker-react";
-import { HashLoader } from "react-spinners";
 
 const socket = io("http://localhost:5000");
 
@@ -23,7 +19,6 @@ function App() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [showLoginForm, setShowLoginForm] = useState(true);
   const [showPicker, setShowPicker] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
 
   const loginSectionRef = useRef(null);
 
@@ -31,14 +26,6 @@ function App() {
     setInputMessage((prevInput) => prevInput + emojiData.emoji);
     setShowPicker(false);
   };
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 5000);
-
-    return () => clearTimeout(timer);
-  }, []);
 
   useEffect(() => {
     socket.on("message", (message) => {
@@ -173,14 +160,6 @@ function App() {
   const showLogin = () => setShowLoginForm(true);
   const showRegister = () => setShowLoginForm(false);
 
-  if (isLoading) {
-    return (
-      <div className="loading-screen">
-        <HashLoader size={180} color="#61e092" /> {/* Loading Spinner */}
-      </div>
-    );
-  }
-
   if (!user) {
     return (
       <div className="App">
@@ -235,8 +214,6 @@ function App() {
           </div>
           <img src="/chat1.png" alt="chat" id="chat1" />
         </div>
-
-        <WhyChooseChatterBox />
         <br />
         <br />
         <br />
