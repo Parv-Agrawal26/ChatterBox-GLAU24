@@ -13,7 +13,7 @@ const LoginForm = ({
       <h2>Already Registered? Login Here!</h2>
       <input
         type="email"
-        placeholder="Username"
+        placeholder="Email"
         value={loginEmail}
         onChange={(e) => setLoginEmail(e.target.value)}
       />
