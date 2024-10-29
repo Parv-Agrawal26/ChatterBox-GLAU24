@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:5000/api";
+const API_BASE_URL = "";
 
 export const fetchMessages = async (selectedUserId) => {
   const response = await fetch(`${API_BASE_URL}/messages/${selectedUserId}`, {
