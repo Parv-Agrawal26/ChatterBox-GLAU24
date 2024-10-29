@@ -27,7 +27,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 // Register route
-app.post("/api/register", async (req, res) => {
+app.post("/register", async (req, res) => {
   try {
     const { username, password, email } = req.body;
     const existingUser = await User.findOne({ email });
@@ -47,7 +47,7 @@ app.post("/api/register", async (req, res) => {
 });
 
 // Login route
-app.post("/api/login", async (req, res) => {
+app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
@@ -78,12 +78,12 @@ app.post("/api/login", async (req, res) => {
 });
 
 // Logout route
-app.post("/api/logout", (req, res) => {
+app.post("/logout", (req, res) => {
   res.clearCookie("token").json({ message: "Logout successful" });
 });
 
 // Get all users
-app.get("/api/users", verifyToken, async (req, res) => {
+app.get("/users", verifyToken, async (req, res) => {
   try {
     const users = await User.find({}, "_id username");
     res.json(users.filter((user) => user._id.toString() !== req.user._id));
@@ -93,7 +93,7 @@ app.get("/api/users", verifyToken, async (req, res) => {
 });
 
 // Get messages between two users
-app.get("/api/messages/:userId", verifyToken, async (req, res) => {
+app.get("/messages/:userId", verifyToken, async (req, res) => {
   try {
     const messages = await Message.find({
       $or: [
@@ -111,7 +111,7 @@ app.get("/api/messages/:userId", verifyToken, async (req, res) => {
 });
 
 // Send message
-app.post("/api/messages", verifyToken, async (req, res) => {
+app.post("/messages", verifyToken, async (req, res) => {
   try {
     const { receiverId, content } = req.body;
     const newMessage = new Message({
