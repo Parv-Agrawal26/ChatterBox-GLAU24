@@ -1,86 +1,140 @@
-# ChatterBox - Real-Time Chat Application
+# ChatterBox
 
-ChatterBox is a full-stack real-time messaging application built using ReactJS, Node.js, Express, MongoDB. The app allows users to register, log in, and engage in private chats with other active users. ChatterBox ensures secure communication with user authentication and supports real-time message delivery, user presence tracking, and instant notifications.
+ChatterBox is a simple full-stack real-time private messaging app. It uses a React frontend and a Node.js + Express backend with MongoDB for persistence. The app supports user registration/login, one-to-one messaging, message history, and real-time message delivery using Socket.IO.
 
-## Features
+This README documents how the project is structured, how to run it in development and production, required environment variables, the HTTP API, and the socket events used for real-time updates.
 
-- **Real-time Messaging**: Send and receive messages instantly.
-- **User Authentication**: Secure user registration and login using bcrypt for password hashing and JWT for session management.
-- **Private Chats**: Engage in one-on-one chats with users.
-- **Message History**: Access chat history between users.
-- **Emoji Support**: Add fun to conversations with emoji integration.
+## Repository layout
 
-## Tech Stack
+- `backend/` - Express server, database connection, API routes, Socket.IO server.
+   - `server.js` - main server file (HTTP + Socket.IO).
+   - `config/mongoose-connection.js` - connects to MongoDB.
+   - `middlewares/verifyToken.js` - reads JWT from cookie and verifies requests.
+   - `models/userModel.js` - Mongoose User model.
+   - `models/messageModel.js` - Mongoose Message model.
+- `frontend/` - React app (Create React App).
+   - `src/services/api.js` - HTTP helpers for auth, users, messages.
+   - `src/services/socket.js` - Socket.IO client instance.
+- `package.json` - root scripts to build/start the app.
 
-### Backend
-- **Node.js & Express**: Handles API routes, authentication, and communication with the database.
-- **MongoDB & Mongoose**: Stores user data and messages.
-- **JWT**: Used for secure authentication.
+## Key features
 
-### Frontend
-- **React**: The frontend is built using React for UI components and state management.
-- **CSS & React-Slick**: Handles the styling and provides a sleek, responsive design for the features section.
-- **Emoji-Picker**: Enables users to send emojis in their messages.
+- User registration and login (passwords hashed with bcrypt).
+- Authentication using JWT stored in an HTTP-only cookie.
+- One-to-one private messages persisted to MongoDB.
+- Real-time messaging via Socket.IO with basic online user tracking.
+- Frontend includes an emoji picker (optional) and a simple chat UI.
 
-## Getting Started
+## Environment variables
 
-### Prerequisites
+Create a `.env` file in `backend/` (or set environment variables in your environment) with at least:
 
-- Node.js installed on your machine.
-- MongoDB running locally or via a cloud provider (MongoDB Atlas).
+- `MONGO_URL` - MongoDB connection string
+- `JWT_SECRET` - secret used to sign JWT tokens
+- `PORT` (optional) - port for the backend (defaults to 5000)
 
-### Installation
+Optional frontend vars (for development):
 
-1. Clone the repository:
+- `REACT_APP_API_BASE_URL` - API base URL (defaults to `http://localhost:5000` in development)
+- `REACT_APP_SOCKET_URL` - Socket.IO server URL (defaults to `http://localhost:5000`)
 
-2. Navigate into the project directory:
+Example `.env` (backend):
 
-3. Install the backend dependencies:
+PORT=5000
+MONGO_URL=mongodb://localhost:27017/chatterbox
+JWT_SECRET=some_strong_secret
 
-   ```bash
-   cd backend
-   npm install
-   ```
+## Install & run (development)
 
-4. Install the frontend dependencies:
+Use PowerShell on Windows or your preferred shell.
 
-   ```bash
-   cd frontend
-   npm install
-   ```
+1) Install dependencies
 
-### Running the Application
+```powershell
+cd C:\Users\agraw\OneDrive\Desktop\chat\ChatterBox-GLAU24
+npm install
+cd frontend
+npm install
+```
 
-1. Start the backend server:
+2) Start backend and frontend in separate terminals
 
-   ```bash
-   cd backend
-   node server.js
-   ```
+Backend:
 
-2. Start the React client:
+```powershell
+cd backend
+node server.js
+```
 
-   ```bash
-   cd frontend
-   npm start
-   ```
+Frontend (dev server):
 
+```powershell
+cd frontend
+npm start
+```
 
-## API Endpoints
+When running locally in development, the frontend defaults to `http://localhost:3000` and the backend to `http://localhost:5000`.
 
-### Auth Routes
-- **POST** `/api/register`: Register a new user.
-- **POST** `/api/login`: Log in an existing user.
+## Build & run (production)
 
-### User Routes
-- **GET** `/api/users`: Retrieve a list of active users.
+To build the frontend and serve it from the Express server (single process):
 
-### Message Routes
-- **GET** `/api/messages/:userId`: Fetch all messages between the authenticated user and the target user.
+```powershell
+cd C:\Users\agraw\OneDrive\Desktop\chat\ChatterBox-GLAU24
+npm run build
+node backend/server.js
+```
 
+The root `package.json` includes a `build` script which installs frontend dependencies then runs the CRA build (`npm run build --prefix frontend`) and the Express server serves the static files from `frontend/build`.
 
-## Future Enhancements
+## API (HTTP)
 
-- Add functionality for deleting user account
-- Improve overall UI
-- Add login session management
+All endpoints that require authentication expect an HTTP-only cookie named `token` containing a JWT. The frontend sets `credentials: 'include'` on requests so cookies are sent.
+
+- POST `/register`
+   - Body: { username, email, password }
+   - Response: 201 on success
+- POST `/login`
+   - Body: { email, password }
+   - Response: sets `token` cookie and returns { message, userId, username }
+- POST `/logout`
+   - Response: clears cookie
+- GET `/users` (protected)
+   - Returns an array of users (each: _id, username) excluding the authenticated user
+- GET `/messages/:userId` (protected)
+   - Returns chat history (messages between the authenticated user and :userId)
+- POST `/messages` (protected)
+   - Body: { receiverId, content }
+   - Saves message and emits `new_message` via Socket.IO to receiver (if online) and sender.
+
+Note: In the code the routes are mounted at the root (`/register`, `/login`, etc.). If you use a proxy or change base paths, adjust the frontend `REACT_APP_API_BASE_URL` accordingly.
+
+## Socket.IO events
+
+Server side (in `backend/server.js`):
+- `connection` - new socket connection
+- `user_connected` (client -> server) - payload: userId; the server stores a mapping userId -> socketId
+- `new_message` (server -> client) - emitted when a message is saved; the client should listen for this to show real-time incoming messages
+
+Client side (in `frontend/src/services/socket.js`):
+- The socket client connects to `REACT_APP_SOCKET_URL` or `http://localhost:5000` by default.
+
+The frontend emits `user_connected` with the authenticated user's id after login so the server can deliver messages to that socket.
+
+## Data models
+
+- User (`backend/models/userModel.js`)
+   - username: String (unique)
+   - email: String (unique)
+   - password: String (hashed)
+- Message (`backend/models/messageModel.js`)
+   - content: String
+   - sender: ObjectId -> User
+   - receiver: ObjectId -> User
+   - timestamp: Date
+
+## Frontend overview
+
+- `src/services/api.js` contains fetch wrappers for auth, users, and messages. They use `credentials: 'include'` so the cookie-based JWT is sent.
+- `src/services/socket.js` exports a singleton Socket.IO client used by React components to listen for `new_message` events and to emit `user_connected`.
+- `src/App.js` demonstrates the flow: login/register UI, fetching users, selecting a user to chat with, fetching messages, sending messages, and receiving real-time messages.

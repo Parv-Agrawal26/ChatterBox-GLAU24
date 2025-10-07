@@ -4,6 +4,7 @@ import AuthPage from "./components/Auth/AuthPage";
 import UserList from "./components/Chat/UserList";
 import ChatWindow from "./components/Chat/ChatWindow";
 import * as api from "./services/api";
+import socket from "./services/socket";
 
 function App() {
   const [messages, setMessages] = useState([]);
@@ -29,6 +30,13 @@ function App() {
   useEffect(() => {
     if (user) {
       api.fetchUsers().then(setUsers).catch(console.error);
+
+      // inform server about connected user
+      try {
+        socket.emit("user_connected", user.userId || user._id || user.id);
+      } catch (e) {
+        // ignore if socket not ready
+      }
     }
   }, [user]);
 
@@ -46,7 +54,31 @@ function App() {
           .catch(console.error);
       }, 3000);
 
-      return () => clearInterval(interval);
+      // Listen for incoming messages via socket and append if they belong to this conversation
+      const onNewMessage = (message) => {
+        // message.receiver may be the current user and sender is selectedUser, or vice versa
+        const otherId = selectedUser._id || selectedUser.id;
+        const currentUserId = user.userId || user._id || user.id;
+        if (
+          (message.sender &&
+            message.sender._id === otherId &&
+            message.receiver &&
+            message.receiver._id === currentUserId) ||
+          (message.receiver &&
+            message.receiver._id === otherId &&
+            message.sender &&
+            message.sender._id === currentUserId)
+        ) {
+          setMessages((prev) => [...prev, message]);
+        }
+      };
+
+      socket.on("new_message", onNewMessage);
+
+      return () => {
+        clearInterval(interval);
+        socket.off("new_message", onNewMessage);
+      };
     }
   }, [user, selectedUser]);
 
