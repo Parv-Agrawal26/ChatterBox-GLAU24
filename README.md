@@ -78,13 +78,6 @@ ChatterBox is a full-stack real-time messaging application built using ReactJS, 
 ### Message Routes
 - **GET** `/api/messages/:userId`: Fetch all messages between the authenticated user and the target user.
 
-## Socket.IO Events
-
-- **`login`**: User logs in, server tracks their socket ID.
-- **`sendMessage`**: Sends a message to another user in real-time.
-- **`message`**: Receives real-time messages from other users.
-- **`activeUsers`**: Updates the list of users.
-
 
 ## Future Enhancements
 
